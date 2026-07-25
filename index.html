@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Form Keanggotaan Jakarta Timur</title>
-  <!-- Library html2pdf untuk convert HTML ke PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     * { box-sizing: border-box; }
@@ -14,22 +13,19 @@
     .form-group { margin-bottom: 15px; }
     label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; }
     input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
-    input:focus, select:focus { outline: none; border-color: #007bff; }
+    input[type="file"] { padding: 5px; }
     
     .btn { width: 100%; padding: 12px; border: none; border-radius: 5px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     .btn-primary { background-color: #007bff; color: white; }
-    .btn-primary:hover { background-color: #0056b3; }
     .btn-secondary { background-color: #6c757d; color: white; }
-    .btn-secondary:hover { background-color: #5a6268; }
     .btn-success { background-color: #28a745; color: white; }
-    .btn-success:hover { background-color: #218838; }
     .btn:disabled { background-color: #ccc; cursor: not-allowed; }
 
     #status { margin-top: 15px; text-align: center; font-weight: bold; }
 
     /* Modal Pop-up Preview */
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-    .modal-content { background-color: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 450px; }
+    .modal-content { background-color: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
     .preview-card { border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #fafafa; margin-bottom: 15px; }
     .preview-item { margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
     .preview-item span { font-weight: bold; color: #333; }
@@ -79,7 +75,17 @@
         </select>
       </div>
 
-      <!-- Tombol Preview -->
+      <!-- INPUT UNTUK UPLOAD FILE KTP & KTA -->
+      <div class="form-group">
+        <label for="fileKtp">Upload File KTP (Foto/PDF):</label>
+        <input type="file" id="fileKtp" accept="image/*,.pdf" required>
+      </div>
+
+      <div class="form-group">
+        <label for="fileKta">Upload File KTA Fisik (Foto/PDF):</label>
+        <input type="file" id="fileKta" accept="image/*,.pdf" required>
+      </div>
+
       <button type="button" class="btn btn-primary" onclick="openPreview()">Pratinjau / Preview Data</button>
     </form>
 
@@ -91,7 +97,6 @@
     <div class="modal-content">
       <h3 style="text-align:center; margin-top:0;">Pratinjau Data</h3>
       
-      <!-- Area yang akan dimasukkan ke PDF -->
       <div id="pdfContent" class="preview-card">
         <h4 style="text-align: center; margin-top: 0; color: #007bff;">BUKTI FORMULIR KEANGGOTAAN</h4>
         <hr style="margin-bottom: 15px;">
@@ -101,9 +106,10 @@
         <div class="preview-item"><span>DPRT (Kelurahan):</span> <br><div id="prevDprt"></div></div>
         <div class="preview-item"><span>Jabatan:</span> <br><div id="prevJabatan"></div></div>
         <div class="preview-item"><span>Status:</span> <br><div id="prevStatus"></div></div>
+        <div class="preview-item"><span>KTP Uploaded:</span> <br><div id="prevKtp"></div></div>
+        <div class="preview-item"><span>KTA Uploaded:</span> <br><div id="prevKta"></div></div>
       </div>
 
-      <!-- Tombol Aksi Modal -->
       <button type="button" class="btn btn-secondary" onclick="downloadPDF()">Download PDF</button>
       <button type="button" class="btn btn-success" id="submitBtn" onclick="submitData()">Kirim / Upload Data</button>
       <button type="button" class="btn btn-secondary" style="background-color: #dc3545;" onclick="closePreview()">Batal & Edit</button>
@@ -111,7 +117,6 @@
   </div>
 
   <script>
-    // DATA WILAYAH JAKARTA TIMUR
     const dataWilayah = {
       "Cakung": ["Cakung Barat", "Cakung Timur", "Jatinegara", "Penggilingan", "Pulo Gebang", "Rawa Terate", "Ujung Menteng"],
       "Cipayung": ["Bambu Apus", "Ceger", "Cilangkap", "Cipayung", "Lubis Buaya", "Munjul", "Pondok Ranggon", "Setu"],
@@ -125,13 +130,12 @@
       "Pulo Gadung": ["Cipinang", "Jati", "Jatinegara Kaum", "Kayu Putih", "Pisangan Timur", "Pulo Gadung", "Rawamangun"]
     };
 
-    // https://script.google.com/macros/s/AKfycbyHyLuuaYDOKyDyikewoH93XS4EadqyjVXMH22qeAUf5GN99LBrgKxv56IfcfsUfx5A/exec
+    // GANTI SCRIPT_URL DENGAN URL DEPLOYMENT APPS SCRIPT ANDA
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyzw-Kjt4T0grxp4P9tubeGP4hz_7IgH-A-D4zsv83PwL4k44mfbThOT2TwvMc1NWnA/exec";
 
     const dpcSelect = document.getElementById('dpc');
     const dprtSelect = document.getElementById('dprt');
 
-    // Populate DPC
     Object.keys(dataWilayah).sort().forEach(kecamatan => {
       let option = document.createElement('option');
       option.value = kecamatan;
@@ -157,13 +161,25 @@
       }
     }
 
-    // Modal Control & Validation
-    function openPreview() {
+    // Helper konversi file ke format Base64 untuk dikirim lewat API
+    function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+      });
+    }
+
+    async function openPreview() {
       const form = document.getElementById('memberForm');
       if (!form.checkValidity()) {
         form.reportValidity();
         return;
       }
+
+      const fileKtp = document.getElementById('fileKtp').files[0];
+      const fileKta = document.getElementById('fileKta').files[0];
 
       document.getElementById('prevNama').textContent = document.getElementById('nama').value;
       document.getElementById('prevNoKta').textContent = document.getElementById('noKta').value;
@@ -171,6 +187,8 @@
       document.getElementById('prevDprt').textContent = dprtSelect.value;
       document.getElementById('prevJabatan').textContent = document.getElementById('jabatan').value;
       document.getElementById('prevStatus').textContent = document.getElementById('statusKeanggotaan').value;
+      document.getElementById('prevKtp').textContent = fileKtp ? fileKtp.name : '-';
+      document.getElementById('prevKta').textContent = fileKta ? fileKta.name : '-';
 
       document.getElementById('previewModal').style.display = 'flex';
     }
@@ -179,7 +197,6 @@
       document.getElementById('previewModal').style.display = 'none';
     }
 
-    // Download PDF Function
     function downloadPDF() {
       const element = document.getElementById('pdfContent');
       const nama = document.getElementById('nama').value || 'Form';
@@ -195,32 +212,53 @@
       html2pdf().set(options).from(element).save();
     }
 
-    // Submit ke Google Sheets
-    function submitData() {
+    async function submitData() {
       const submitBtn = document.getElementById('submitBtn');
       const statusText = document.getElementById('status');
       
       submitBtn.disabled = true;
-      submitBtn.textContent = "Mengirim...";
+      submitBtn.textContent = "Mengunggah berkas & menyimpan...";
 
-      const formData = {
-        nama: document.getElementById('nama').value,
-        noKta: document.getElementById('noKta').value,
-        dpc: dpcSelect.value,
-        dprt: dprtSelect.value,
-        jabatan: document.getElementById('jabatan').value,
-        status: document.getElementById('statusKeanggotaan').value
-      };
+      try {
+        const fileKtp = document.getElementById('fileKtp').files[0];
+        const fileKta = document.getElementById('fileKta').files[0];
 
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify(formData)
-      })
-      .then(response => response.json())
-      .then(data => {
-        if(data.status === 'success') {
+        let ktpBase64 = "", ktpName = "";
+        let ktaBase64 = "", ktaName = "";
+
+        if (fileKtp) {
+          ktpBase64 = await toBase64(fileKtp);
+          ktpName = fileKtp.name;
+        }
+
+        if (fileKta) {
+          ktaBase64 = await toBase64(fileKta);
+          ktaName = fileKta.name;
+        }
+
+        const formData = {
+          nama: document.getElementById('nama').value,
+          noKta: document.getElementById('noKta').value,
+          dpc: dpcSelect.value,
+          dprt: dprtSelect.value,
+          jabatan: document.getElementById('jabatan').value,
+          status: document.getElementById('statusKeanggotaan').value,
+          ktpBase64: ktpBase64,
+          ktpName: ktpName,
+          ktaBase64: ktaBase64,
+          ktaName: ktaName
+        };
+
+        const response = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
           statusText.style.color = "green";
-          statusText.textContent = "Data Berhasil Disimpan!";
+          statusText.textContent = "Data & Berkas Berhasil Disimpan!";
           document.getElementById('memberForm').reset();
           dprtSelect.disabled = true;
           dprtSelect.innerHTML = '<option value="">-- Pilih DPC Terlebih Dahulu --</option>';
@@ -228,15 +266,13 @@
         } else {
           alert("Gagal: " + data.message);
         }
-      })
-      .catch(error => {
-        alert("Terjadi kesalahan koneksi!");
-        console.error('Error!', error.message);
-      })
-      .finally(() => {
+      } catch (error) {
+        alert("Terjadi kesalahan sistem saat unggah!");
+        console.error(error);
+      } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = "Kirim / Upload Data";
-      });
+      }
     }
   </script>
 </body>
