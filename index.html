@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Keanggotaan Jakarta Timur</title>
+  <!-- Library html2pdf untuk convert HTML ke PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 20px; display: flex; justify-content: center; }
+    .form-container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
+    h2 { text-align: center; color: #333; margin-bottom: 20px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+    input:focus, select:focus { outline: none; border-color: #007bff; }
+    
+    .btn { width: 100%; padding: 12px; border: none; border-radius: 5px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    .btn-primary { background-color: #007bff; color: white; }
+    .btn-primary:hover { background-color: #0056b3; }
+    .btn-secondary { background-color: #6c757d; color: white; }
+    .btn-secondary:hover { background-color: #5a6268; }
+    .btn-success { background-color: #28a745; color: white; }
+    .btn-success:hover { background-color: #218838; }
+    .btn:disabled { background-color: #ccc; cursor: not-allowed; }
+
+    #status { margin-top: 15px; text-align: center; font-weight: bold; }
+
+    /* Modal Pop-up Preview */
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+    .modal-content { background-color: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 450px; }
+    .preview-card { border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #fafafa; margin-bottom: 15px; }
+    .preview-item { margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
+    .preview-item span { font-weight: bold; color: #333; }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <h2>Form Keanggotaan Jaktim</h2>
+    <form id="memberForm">
+      
+      <div class="form-group">
+        <label for="nama">Nama Lengkap:</label>
+        <input type="text" id="nama" required placeholder="Masukkan Nama">
+      </div>
+
+      <div class="form-group">
+        <label for="noKta">No KTA:</label>
+        <input type="text" id="noKta" required placeholder="Masukkan No KTA">
+      </div>
+
+      <div class="form-group">
+        <label for="dpc">DPC (Kecamatan):</label>
+        <select id="dpc" required onchange="updateDprtOptions()">
+          <option value="">-- Pilih Kecamatan --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="dprt">DPRT (Kelurahan):</label>
+        <select id="dprt" required disabled>
+          <option value="">-- Pilih DPC Terlebih Dahulu --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="jabatan">Jabatan:</label>
+        <input type="text" id="jabatan" required placeholder="Contoh: Ketua, Anggota, dll.">
+      </div>
+
+      <div class="form-group">
+        <label for="statusKeanggotaan">Status:</label>
+        <select id="statusKeanggotaan" required>
+          <option value="">-- Pilih Status --</option>
+          <option value="Aktif">Aktif</option>
+          <option value="Tidak Aktif">Tidak Aktif</option>
+        </select>
+      </div>
+
+      <!-- Tombol Preview -->
+      <button type="button" class="btn btn-primary" onclick="openPreview()">Pratinjau / Preview Data</button>
+    </form>
+
+    <p id="status"></p>
+  </div>
+
+  <!-- MODAL POPUP PREVIEW -->
+  <div id="previewModal" class="modal">
+    <div class="modal-content">
+      <h3 style="text-align:center; margin-top:0;">Pratinjau Data</h3>
+      
+      <!-- Area yang akan dimasukkan ke PDF -->
+      <div id="pdfContent" class="preview-card">
+        <h4 style="text-align: center; margin-top: 0; color: #007bff;">BUKTI FORMULIR KEANGGOTAAN</h4>
+        <hr style="margin-bottom: 15px;">
+        <div class="preview-item"><span>Nama:</span> <br><div id="prevNama"></div></div>
+        <div class="preview-item"><span>No KTA:</span> <br><div id="prevNoKta"></div></div>
+        <div class="preview-item"><span>DPC (Kecamatan):</span> <br><div id="prevDpc"></div></div>
+        <div class="preview-item"><span>DPRT (Kelurahan):</span> <br><div id="prevDprt"></div></div>
+        <div class="preview-item"><span>Jabatan:</span> <br><div id="prevJabatan"></div></div>
+        <div class="preview-item"><span>Status:</span> <br><div id="prevStatus"></div></div>
+      </div>
+
+      <!-- Tombol Aksi Modal -->
+      <button type="button" class="btn btn-secondary" onclick="downloadPDF()">Download PDF</button>
+      <button type="button" class="btn btn-success" id="submitBtn" onclick="submitData()">Kirim / Upload Data</button>
+      <button type="button" class="btn btn-secondary" style="background-color: #dc3545;" onclick="closePreview()">Batal & Edit</button>
+    </div>
+  </div>
+
+  <script>
+    // DATA WILAYAH JAKARTA TIMUR
+    const dataWilayah = {
+      "Cakung": ["Cakung Barat", "Cakung Timur", "Jatinegara", "Penggilingan", "Pulo Gebang", "Rawa Terate", "Ujung Menteng"],
+      "Cipayung": ["Bambu Apus", "Ceger", "Cilangkap", "Cipayung", "Lubis Buaya", "Munjul", "Pondok Ranggon", "Setu"],
+      "Ciracas": ["Cibubur", "Ciracas", "Kelapa Dua Wetan", "Rambutan", "Susukan"],
+      "Duren Sawit": ["Duren Sawit", "Pondok Bambu", "Pondok Kelapa", "Pondok Kopi", "Malaka Jaya", "Malaka Sari", "Klender"],
+      "Jatinegara": ["Bali Mester", "Bidara Cina", "Cipinang Besar Selatan", "Cipinang Besar Utara", "Cipinang Cempedak", "Cipinang Muara", "Kampung Melayu", "Rawa Bunga"],
+      "Kramat Jati": ["Balekambang", "Batu Ampar", "Cawang", "Cililitan", "Dukuh", "Kramat Jati", "Tengah"],
+      "Makasar": ["Cipinang Melayu", "Kebon Pala", "Makasar", "Pinang Ranti", "Halim Perdanakusuma"],
+      "Matraman": ["Kayu Manis", "Kebon Manggis", "Pal Meriam", "Pisangan Baru", "Utan Kayu Selatan", "Utan Kayu Utara"],
+      "Pasar Rebo": ["Baru", "Cijantung", "Kalisari", "Pekayon", "Gedong"],
+      "Pulo Gadung": ["Cipinang", "Jati", "Jatinegara Kaum", "Kayu Putih", "Pisangan Timur", "Pulo Gadung", "Rawamangun"]
+    };
+
+    // https://script.google.com/macros/s/AKfycbyHyLuuaYDOKyDyikewoH93XS4EadqyjVXMH22qeAUf5GN99LBrgKxv56IfcfsUfx5A/exec
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHyLuuaYDOKyDyikewoH93XS4EadqyjVXMH22qeAUf5GN99LBrgKxv56IfcfsUfx5A/exec";
+
+    const dpcSelect = document.getElementById('dpc');
+    const dprtSelect = document.getElementById('dprt');
+
+    // Populate DPC
+    Object.keys(dataWilayah).sort().forEach(kecamatan => {
+      let option = document.createElement('option');
+      option.value = kecamatan;
+      option.textContent = kecamatan;
+      dpcSelect.appendChild(option);
+    });
+
+    function updateDprtOptions() {
+      const selectedDpc = dpcSelect.value;
+      dprtSelect.innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+
+      if (selectedDpc && dataWilayah[selectedDpc]) {
+        dprtSelect.disabled = false;
+        dataWilayah[selectedDpc].sort().forEach(kelurahan => {
+          let option = document.createElement('option');
+          option.value = kelurahan;
+          option.textContent = kelurahan;
+          dprtSelect.appendChild(option);
+        });
+      } else {
+        dprtSelect.disabled = true;
+        dprtSelect.innerHTML = '<option value="">-- Pilih DPC Terlebih Dahulu --</option>';
+      }
+    }
+
+    // Modal Control & Validation
+    function openPreview() {
+      const form = document.getElementById('memberForm');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      document.getElementById('prevNama').textContent = document.getElementById('nama').value;
+      document.getElementById('prevNoKta').textContent = document.getElementById('noKta').value;
+      document.getElementById('prevDpc').textContent = dpcSelect.value;
+      document.getElementById('prevDprt').textContent = dprtSelect.value;
+      document.getElementById('prevJabatan').textContent = document.getElementById('jabatan').value;
+      document.getElementById('prevStatus').textContent = document.getElementById('statusKeanggotaan').value;
+
+      document.getElementById('previewModal').style.display = 'flex';
+    }
+
+    function closePreview() {
+      document.getElementById('previewModal').style.display = 'none';
+    }
+
+    // Download PDF Function
+    function downloadPDF() {
+      const element = document.getElementById('pdfContent');
+      const nama = document.getElementById('nama').value || 'Form';
+      
+      const options = {
+        margin:       10,
+        filename:     `Form_Keanggotaan_${nama}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'mm', format: 'a5', orientation: 'portrait' }
+      };
+
+      html2pdf().set(options).from(element).save();
+    }
+
+    // Submit ke Google Sheets
+    function submitData() {
+      const submitBtn = document.getElementById('submitBtn');
+      const statusText = document.getElementById('status');
+      
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Mengirim...";
+
+      const formData = {
+        nama: document.getElementById('nama').value,
+        noKta: document.getElementById('noKta').value,
+        dpc: dpcSelect.value,
+        dprt: dprtSelect.value,
+        jabatan: document.getElementById('jabatan').value,
+        status: document.getElementById('statusKeanggotaan').value
+      };
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(formData)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if(data.status === 'success') {
+          statusText.style.color = "green";
+          statusText.textContent = "Data Berhasil Disimpan!";
+          document.getElementById('memberForm').reset();
+          dprtSelect.disabled = true;
+          dprtSelect.innerHTML = '<option value="">-- Pilih DPC Terlebih Dahulu --</option>';
+          closePreview();
+        } else {
+          alert("Gagal: " + data.message);
+        }
+      })
+      .catch(error => {
+        alert("Terjadi kesalahan koneksi!");
+        console.error('Error!', error.message);
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Kirim / Upload Data";
+      });
+    }
+  </script>
+</body>
+</html>
