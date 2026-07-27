@@ -47,6 +47,18 @@
         <input type="text" id="noKta" required placeholder="Masukkan No KTA">
       </div>
 
+      <!-- INPUT BARU: NO HP -->
+      <div class="form-group">
+        <label for="noHp">No HP / WhatsApp:</label>
+        <input type="tel" id="noHp" required placeholder="Contoh: 08123456789">
+      </div>
+
+      <!-- INPUT BARU: EMAIL -->
+      <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" id="email" required placeholder="Contoh: nama@gmail.com">
+      </div>
+
       <div class="form-group">
         <label for="dpc">DPC (Kecamatan):</label>
         <select id="dpc" required onchange="updateDprtOptions()">
@@ -102,6 +114,8 @@
         <hr style="margin-bottom: 15px;">
         <div class="preview-item"><span>Nama:</span> <br><div id="prevNama"></div></div>
         <div class="preview-item"><span>No KTA:</span> <br><div id="prevNoKta"></div></div>
+        <div class="preview-item"><span>No HP / WhatsApp:</span> <br><div id="prevNoHp"></div></div>
+        <div class="preview-item"><span>Email:</span> <br><div id="prevEmail"></div></div>
         <div class="preview-item"><span>DPC (Kecamatan):</span> <br><div id="prevDpc"></div></div>
         <div class="preview-item"><span>DPRT (Kelurahan):</span> <br><div id="prevDprt"></div></div>
         <div class="preview-item"><span>Jabatan:</span> <br><div id="prevJabatan"></div></div>
@@ -183,6 +197,8 @@
 
       document.getElementById('prevNama').textContent = document.getElementById('nama').value;
       document.getElementById('prevNoKta').textContent = document.getElementById('noKta').value;
+      document.getElementById('prevNoHp').textContent = document.getElementById('noHp').value;
+      document.getElementById('prevEmail').textContent = document.getElementById('email').value;
       document.getElementById('prevDpc').textContent = dpcSelect.value;
       document.getElementById('prevDprt').textContent = dprtSelect.value;
       document.getElementById('prevJabatan').textContent = document.getElementById('jabatan').value;
@@ -239,6 +255,8 @@
         const formData = {
           nama: document.getElementById('nama').value,
           noKta: document.getElementById('noKta').value,
+          noHp: document.getElementById('noHp').value,
+          email: document.getElementById('email').value,
           dpc: dpcSelect.value,
           dprt: dprtSelect.value,
           jabatan: document.getElementById('jabatan').value,
